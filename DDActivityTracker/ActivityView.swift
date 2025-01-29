@@ -21,6 +21,24 @@ struct ActivityView: View {
     
     @State private var selectCount: Int?
     
+    var totalHours: Double {
+        var hours = 0.0
+        for activity in activities {
+            hours += activity.hoursPerDay
+        }
+        return hours
+    }
+    
+    var remainingHours: Double {
+        24 - totalHours
+    }
+    
+    var maxHoursOfSelected: Double {
+        remainingHours + hoursPerDay
+    }
+    
+    let step = 1.0
+    
     var body: some View {
         NavigationStack {
             VStack {
@@ -60,10 +78,44 @@ struct ActivityView: View {
                         angularInset: 1)
                     .foregroundStyle(Color.green)
                 }
+                .chartAngleSelection(value: $selectCount)
+                
+                List(activities) { activity in
+                    Text(activity.name)
+                        .onTapGesture {
+                            withAnimation {
+                                currentActivity = activity
+                                hoursPerDay = activity.hoursPerDay
+                            }
+                        }
+                }
+                .listStyle(.plain)
+                .scrollIndicators(.hidden)
+                
+                if let currentActivity {
+                    Slider(value: $hoursPerDay, in: 0...maxHoursOfSelected, step: step)
+                        .onChange(of: hoursPerDay) { oldValue, newValue in
+                            // TODO:
+                        }
+                }
+                
+                Button("Add") {
+                    addActivity()
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(remainingHours <= 0)
             }
             .padding()
             .navigationTitle("Activity Tracker")
         }
+    }
+    
+    private func addActivity() {
+        // TODO: addActivity
+    }
+    
+    private func deleteActivity(at offsets: IndexSet) {
+        // TODO: deleteActivity
     }
 }
 
