@@ -42,52 +42,41 @@ struct ActivityView: View {
     var body: some View {
         NavigationStack {
             VStack {
-                Chart {
-                    let isSelected: Bool = true
-                    
-                    ForEach(activities) { activity in
-                        SectorMark(
-                            angle: .value("Activities", activity.hoursPerDay),
-                            innerRadius: .ratio(0.6),
-                            outerRadius: isSelected ? 1.05 : 0.95,
-                            angularInset: 1
-                        )
-                        .foregroundStyle(Color.red)
-                        .cornerRadius(20)
-                    }
-                    
-                    SectorMark(
-                        angle: .value("value", 5),
-                        innerRadius: .ratio(0.6),
-                        outerRadius: .ratio(0.95),
-                        angularInset: 1)
-                    .foregroundStyle(Color.red)
-                    .cornerRadius(20)
-                    
-                    SectorMark(
-                        angle: .value("value", 3),
-                        innerRadius: .ratio(0.6),
-                        outerRadius: .ratio(1.05),
-                        angularInset: 1)
-                    .foregroundStyle(Color.blue)
-                    
-                    SectorMark(
-                        angle: .value("value", 17),
-                        innerRadius: .ratio(0.6),
-                        outerRadius: .ratio(0.95),
-                        angularInset: 1)
-                    .foregroundStyle(Color.green)
-                }
-                .chartAngleSelection(value: $selectCount)
-                
-                List(activities) { activity in
-                    ActivityRow(activity: activity)
-                        .onTapGesture {
-                            withAnimation {
-                                currentActivity = activity
-                                hoursPerDay = activity.hoursPerDay
-                            }
+                if activities.isEmpty {
+                    ContentUnavailableView("Enter an Activity", systemImage: "list.dash")
+                } else {
+                    Chart {
+                        let isSelected: Bool = true
+                        
+                        ForEach(activities) { activity in
+                            SectorMark(
+                                angle: .value("Activities", activity.hoursPerDay),
+                                innerRadius: .ratio(0.6),
+                                outerRadius: isSelected ? 1.05 : 0.95,
+                                angularInset: 1
+                            )
+                            .foregroundStyle(Color.red)
+                            .cornerRadius(5)
                         }
+                    }
+                    .chartAngleSelection(value: $selectCount)
+                }
+                
+                List {
+                    ForEach(activities) { activity in
+                        ActivityRow(activity: activity)
+                            .contentShape(Rectangle())
+                            .listRowBackground(
+                                currentActivity?.name == activity.name ? Color.blue.opacity(0.3) : Color.clear
+                            )
+                            .onTapGesture {
+                                withAnimation {
+                                    currentActivity = activity
+                                    hoursPerDay = activity.hoursPerDay
+                                }
+                            }
+                    }
+                    .onDelete(perform: deleteActivity)
                 }
                 .listStyle(.plain)
                 .scrollIndicators(.hidden)
@@ -103,8 +92,9 @@ struct ActivityView: View {
                 if let currentActivity {
                     Slider(value: $hoursPerDay, in: 0...maxHoursOfSelected, step: step)
                         .onChange(of: hoursPerDay) { oldValue, newValue in
-                            // TODO: implement
-                            
+                            if let index = self.activities.firstIndex(where: {$0.name == currentActivity.name}) {
+                                activities[index].hoursPerDay = newValue
+                            }
                         }
                 }
                 
@@ -116,6 +106,17 @@ struct ActivityView: View {
             }
             .padding()
             .navigationTitle("Activity Tracker")
+            .toolbar {
+                EditButton()
+                    .onChange(of: selectCount) { oldValue, newValue in
+                        if let newValue {
+                            withAnimation {
+                                // change currentActivity based on newValue of selectCount
+                                getSelected(value: newValue)
+                            }
+                        }
+                    }
+            }
         }
     }
     
@@ -135,7 +136,14 @@ struct ActivityView: View {
     }
     
     private func deleteActivity(at offsets: IndexSet) {
-        // TODO: deleteActivity
+        offsets.forEach { index in
+            let activity = activities[index]
+            context.delete(activity)
+        }
+    }
+    
+    private func getSelected(value: Int) {
+        // TODO: getSelected
     }
 }
 
