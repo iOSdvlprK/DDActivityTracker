@@ -46,17 +46,18 @@ struct ActivityView: View {
                     ContentUnavailableView("Enter an Activity", systemImage: "list.dash")
                 } else {
                     Chart {
-                        let isSelected: Bool = true
-                        
                         ForEach(activities) { activity in
+                            let isSelected: Bool = currentActivity?.name == activity.name
+                            
                             SectorMark(
                                 angle: .value("Activities", activity.hoursPerDay),
                                 innerRadius: .ratio(0.6),
-                                outerRadius: isSelected ? 1.05 : 0.95,
+                                outerRadius: .ratio(isSelected ? 1.05 : 0.95),
                                 angularInset: 1
                             )
-                            .foregroundStyle(Color.red)
+                            .foregroundStyle(by: .value("activity", activity.name))
                             .cornerRadius(5)
+                            .opacity(isSelected ? 1 : 0.7)
                         }
                     }
                     .chartAngleSelection(value: $selectCount)
@@ -122,7 +123,9 @@ struct ActivityView: View {
     
     private func addActivity() {
         if newName.count > 2 && !activities.contains(where: { $0.name.lowercased() == newName.lowercased() }) {
-            // go ahead and add activity
+            // reset hoursPerDay
+            hoursPerDay = 0
+            
             let activity = Activity(name: newName, hoursPerDay: hoursPerDay)
             
             // add new activity
