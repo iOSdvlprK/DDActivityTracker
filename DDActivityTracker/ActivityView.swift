@@ -146,7 +146,12 @@ struct ActivityView: View {
     }
     
     private func getSelected(value: Int) {
-        // TODO: getSelected
+        var cumulativeTotal = 0.0
+        if let activity = activities.first(where: { cumulativeTotal += $0.hoursPerDay; return Int(cumulativeTotal) >= value }) {
+            
+            // update currentActivity
+            currentActivity = activity
+        }
     }
 }
 
